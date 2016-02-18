@@ -11,8 +11,6 @@ type GetHandler<T> = (payload?: any, context?: T) => Promise<any>;
 type PostHandler<T> = (payload?: any, context?: T) => Promise<void>;
 
 export interface ServerService<T> {
-  name: string,
-
   context?: (context: RequestContext) => Promise<T>;
 
   // GET

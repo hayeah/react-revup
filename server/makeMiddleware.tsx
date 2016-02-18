@@ -32,7 +32,6 @@ export function makeMiddleware (
     }
 
     match({ routes, location }, async (error, redirectLocation, renderProps) => {
-      // TODO try/catch
       if (error) {
         next(error);
         return;
