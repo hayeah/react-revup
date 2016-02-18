@@ -55,9 +55,9 @@ class DirectService implements Service {
   service: ServerService<any>;
   store: Store;
   context: RequestContext;
-  parent: DirectBackend;
+  parent: DirectServiceFactory;
 
-  constructor(parent: DirectBackend, service: ServerService<any>, store: Store, context: RequestContext) {
+  constructor(parent: DirectServiceFactory, service: ServerService<any>, store: Store, context: RequestContext) {
     this.parent = parent;
     this.service = service;
     this.store = store;

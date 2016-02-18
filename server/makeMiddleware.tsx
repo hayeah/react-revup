@@ -6,16 +6,17 @@ const { Router, RouterContext, match, createMemoryHistory } = require('react-rou
 
 import { DirectServiceFactory } from "./DirectServiceFactory";
 import { createStore } from "../store";
-import { ServerServices } from "../index";
+import { ServerServices, HYDRATION_DATA_NAME } from "../index";
 import { ServiceContext } from "../react";
 
 interface MiddlewareConfig {
   routes: any;
   services: ServerServices;
+  scripts: string[];
 }
 
 export function makeMiddleware(config: MiddlewareConfig) {
-  const { routes, services } = config;
+  const { routes, services, scripts } = config;
 
   async function matchRoute(req, res, next) {
     const history = createMemoryHistory();
@@ -79,10 +80,16 @@ export function makeMiddleware(config: MiddlewareConfig) {
         // Second rendering pass, with loaded data
         console.log("throw away first pass", output);
         await factory.waitLoadRequests();
-        output = ReactDOM.renderToString(<App/>);
+        output = ReactDOM.renderToString(<App hydrationData={store.get()}/>);
       }
 
-      res.end(output);
+      const pageWithLayout = <HTML5BoilerPlate content={output} hydrationData={store.get()} scripts={scripts}/>;
+
+
+	    res.write("<!doctype html>");
+      res.write(ReactDOM.renderToStaticMarkup(pageWithLayout))
+
+      res.end();
     });
   }
 
@@ -91,3 +98,36 @@ export function makeMiddleware(config: MiddlewareConfig) {
   };
 }
 
+function Hydration(props) {
+  const {data} = props;
+  const hydrationDataInjection = {
+    __html: `// <![CDATA[\n console.log("hydrate client store");window.${HYDRATION_DATA_NAME} = ${JSON.stringify(data)} \n // ]]>`
+  }
+  return <script type="text/javascript" dangerouslySetInnerHTML={hydrationDataInjection}/>
+}
+
+function HTML5BoilerPlate(props) {
+  const {content, hydrationData, scripts} = props;
+
+	const scriptTags = scripts.map((script, i) => {
+    return <script key={i} type="text/javascript" src={script}/>
+  });
+
+  return (
+    <html>
+       <head>
+          <meta httpEquiv="x-ua-compatible" content="ie=edge"/>
+          <title>Hi!</title>
+          <meta name="description" content=""/>
+          <meta name="viewport" content="width=device-width, initial-scale=1"/>
+      </head>
+
+      <body>
+        <div id="react-root" dangerouslySetInnerHTML={{__html: content}}/>
+
+        {hydrationData && <Hydration data={hydrationData}/>}
+        {scriptTags}
+      </body>
+    </html>
+  )
+}
