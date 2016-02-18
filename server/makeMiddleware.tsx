@@ -26,7 +26,7 @@ export function makeMiddleware (
 
     // Ignore requests that looks like JSON.
     // In particular, we want `Accept: */*` to not match if we are curling the API.
-    if(req.url.match(/\.json$/) || req.headers.accept.match("json")) {
+    if(req.path.match(/\.json$/) || req.headers.accept.match("json")) {
       next();
       return;
     }
