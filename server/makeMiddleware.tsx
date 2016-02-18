@@ -6,7 +6,7 @@ const { Router, RouterContext, match, createMemoryHistory } = require('react-rou
 
 import { DirectServiceFactory } from "./DirectServiceFactory";
 import { createStore } from "../store";
-import { ServerServices, HYDRATION_DATA_NAME, REACT_ROOT_ID } from "../index";
+import { ServerServices, HYDRATION_DATA_NAME, REACT_ROOT_ID, SERVICE_CURSOR_PATH } from "../index";
 import { ServiceContext } from "../react";
 
 interface MiddlewareConfig {
@@ -49,7 +49,7 @@ export function makeMiddleware (
 
       const store = createStore();
 
-      const factory = new DirectServiceFactory(services, store.select("services"), {
+      const factory = new DirectServiceFactory(services, store.select(SERVICE_CURSOR_PATH), {
         req,
       });
       // const service;

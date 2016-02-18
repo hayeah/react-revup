@@ -5,22 +5,28 @@ const { Router, browserHistory } = require('react-router');
 
 import {
   HYDRATION_DATA_NAME,
-  REACT_MOUNT_ROOT_ID,
+  REACT_ROOT_ID,
+  SERVICE_CURSOR_PATH,
 
   Store,
   ServiceFactory,
   Service,
+
+
+  Routes,
 } from "./index";
 import {createStore} from "./store";
 
 import { ServiceContext } from "./react";
 
-export function mount(props) {
-  const {routes} = props;
+export function mountRoutes(routes: Routes) {
+  // const {routes} = props;
 
-  const store = createStore(window[HYDRATION_DATA_NAME] || {});
+  const hydrationData = window[HYDRATION_DATA_NAME] || {};
 
-  const factory = new RemoteServiceFactory(null, store);
+  const store = createStore(hydrationData);
+
+  const factory = new RemoteServiceFactory(null, store.select(SERVICE_CURSOR_PATH));
 
   function App() {
     return (
@@ -30,7 +36,7 @@ export function mount(props) {
     );
   };
 
-  ReactDOM.render(<App/>,document.querySelector(`#${REACT_MOUNT_ROOT_ID}`));
+  ReactDOM.render(<App/>, document.querySelector(`#${REACT_ROOT_ID}`));
 }
 
 export class RemoteServiceFactory implements ServiceFactory {
