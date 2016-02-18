@@ -6,17 +6,19 @@ const { Router, RouterContext, match, createMemoryHistory } = require('react-rou
 
 import { DirectServiceFactory } from "./DirectServiceFactory";
 import { createStore } from "../store";
-import { ServerServices, HYDRATION_DATA_NAME } from "../index";
+import { ServerServices, HYDRATION_DATA_NAME, REACT_ROOT_ID } from "../index";
 import { ServiceContext } from "../react";
 
 interface MiddlewareConfig {
-  routes: any;
-  services: ServerServices;
-  scripts: string[];
 }
 
-export function makeMiddleware(config: MiddlewareConfig) {
-  const { routes, services, scripts } = config;
+export function makeMiddleware (
+  routes: any,
+  services: ServerServices,
+  StaticHTMLWrapper: React.ComponentClass<any> | React.StatelessComponent<any>,
+  config?: MiddlewareConfig
+  ) {
+  // const { routes, services, scripts, StaticHTMLWrapper } = config;
 
   async function matchRoute(req, res, next) {
     const history = createMemoryHistory();
@@ -80,54 +82,38 @@ export function makeMiddleware(config: MiddlewareConfig) {
         // Second rendering pass, with loaded data
         console.log("throw away first pass", output);
         await factory.waitLoadRequests();
-        output = ReactDOM.renderToString(<App hydrationData={store.get()}/>);
+        output = ReactDOM.renderToString(<App/>);
       }
 
-      const pageWithLayout = <HTML5BoilerPlate content={output} hydrationData={store.get()} scripts={scripts}/>;
+      const hydrationData = store.get();
 
+      // cast to any to supress typescript error...
+      const StaticHTMLWrapper_: any = StaticHTMLWrapper;
 
-	    res.write("<!doctype html>");
-      res.write(ReactDOM.renderToStaticMarkup(pageWithLayout))
+      const viewWithStaticWrapper = (
+        <StaticHTMLWrapper_ {...renderProps}>
+          <div id={REACT_ROOT_ID} dangerouslySetInnerHTML={{__html: output}}/>
+          {hydrationData && <InjectHydrationData data={hydrationData}/>}
+        </StaticHTMLWrapper_>
+      );
 
+	    res.write("<!doctype html>\n");
+      res.write(ReactDOM.renderToStaticMarkup(viewWithStaticWrapper));
       res.end();
     });
   }
 
-	return async (req, res, next) => {
+	return (req, res, next) => {
     matchRoute(req, res, next).catch(next);
   };
 }
 
-function Hydration(props) {
+function InjectHydrationData(props) {
   const {data} = props;
+  const setWindowData = `window.${HYDRATION_DATA_NAME} = ${JSON.stringify(data)};`
   const hydrationDataInjection = {
-    __html: `// <![CDATA[\n console.log("hydrate client store");window.${HYDRATION_DATA_NAME} = ${JSON.stringify(data)} \n // ]]>`
-  }
-  return <script type="text/javascript" dangerouslySetInnerHTML={hydrationDataInjection}/>
+    __html: `\n//<![CDATA[\n${setWindowData}\n//]]>\n`
+  };
+  return <script type="text/javascript" dangerouslySetInnerHTML={hydrationDataInjection}/>;
 }
 
-function HTML5BoilerPlate(props) {
-  const {content, hydrationData, scripts} = props;
-
-	const scriptTags = scripts.map((script, i) => {
-    return <script key={i} type="text/javascript" src={script}/>
-  });
-
-  return (
-    <html>
-       <head>
-          <meta httpEquiv="x-ua-compatible" content="ie=edge"/>
-          <title>Hi!</title>
-          <meta name="description" content=""/>
-          <meta name="viewport" content="width=device-width, initial-scale=1"/>
-      </head>
-
-      <body>
-        <div id="react-root" dangerouslySetInnerHTML={{__html: content}}/>
-
-        {hydrationData && <Hydration data={hydrationData}/>}
-        {scriptTags}
-      </body>
-    </html>
-  )
-}

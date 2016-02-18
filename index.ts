@@ -1,7 +1,7 @@
 import express = require("express");
 const Baobab = require("baobab");
 
-export const REACT_MOUNT_ROOT_ID = "react-root";
+export const REACT_ROOT_ID = "react-root";
 export const JSON_PAYLOAD_HEADER = 'x-json-payload';
 export const HYDRATION_DATA_NAME = "__REVUP_HYDRATION_DATA__";
 
