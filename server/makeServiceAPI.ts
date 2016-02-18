@@ -37,19 +37,28 @@ export function makeServiceAPI(services: ServerServices) {
   return router;
 
   function handleError(error, req, res) {
-    res.json({error});
+    res.json({ error });
   }
 
   async function getHandler(req, res, next) {
     // TODO handle query. should it be payload or context? probably payload -.-
     const service = services[req.params.service];
 
-    if(service === undefined) {
+    if (service === undefined) {
       next();
       return;
     }
 
-    const payload = {};
+    // Just merge everything together into a payload??
+    const payload = Object.assign({}, req.query, req.params);
+
+    const rawJSONPayload = req.headers[JSON_PAYLOAD_HEADER];
+    if (rawJSONPayload) {
+      // FIXME: what if payload is a primitive type?
+      const headerPayload = JSON.parse(rawJSONPayload);
+      Object.assign(payload, headerPayload);
+    }
+
     const result = await invoke(req, res, service, req.params.method, payload);
 
     const response: GetResponse = {
@@ -62,7 +71,7 @@ export function makeServiceAPI(services: ServerServices) {
   async function postHandler(req, res, next) {
     const service = services[req.params.service];
 
-    if(service === undefined) {
+    if (service === undefined) {
       next();
       return;
     }
@@ -87,7 +96,7 @@ async function invoke<Context>(
   // build context
   let context: Context;
   if (service.context) {
-    context = await service.context({req});
+    context = await service.context({ req });
   }
 
   const handler = service.get[method];
