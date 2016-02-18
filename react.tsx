@@ -86,16 +86,37 @@ export function ServiceRoot(Component: any, serviceName: string, getMethod: stri
     }
 
     componentDidMount() {
-      // TODO client side should observe store and rerender
-      const store = this.state.store;
+      this.state.store.on("update", this.onUpdate);
     }
 
-    loadData() {
+    componentWillUnmount() {
+      this.state.store.off("update", this.onUpdate);
+      this.clearCache();
+    }
+
+    clearCache() {
+      this.state.store.unset();
+    }
+
+    // If two paths share the same routing component (or if query or parameter changes) we get this lifecycle when transitioning between them.
+    componentWillReceiveProps(nextProps) {
+      if(nextProps !== this.props) {
+        // I think this is always going to be the case?
+        // Maybe add more sophisticated caching policy in the future.
+        this.loadData(nextProps);
+      }
+    }
+
+    onUpdate = () => {
+      this.forceUpdate();
+    }
+
+    loadData(props = this.props) {
       const {service} = this.state;
 
       // These are injected by the Router
       // https://github.com/reactjs/react-router/blob/latest/docs/API.md#injected-props
-      const {location, params} = this.props;
+      const {location, params} = props;
 
       const payload = Object.assign({}, location.query, params);
 

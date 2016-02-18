@@ -50,6 +50,7 @@ export interface RequestContext {
 }
 
 export interface Cursor<T> {
+  unset(): void;
   get(): T;
   set(data: T);
   select(key: string): Cursor<any>;
@@ -59,7 +60,10 @@ export interface Cursor<T> {
   // https://github.com/Microsoft/TypeScript/issues/4889#issuecomment-178819795
   // https://github.com/Microsoft/TypeScript/pull/5949
   // merge<T extends U, U>(val: U)
-  merge(obj: Object)
+  merge(obj: Object);
+
+  on(event: string, fn: Function);
+  off(event: string, fn: Function);
 }
 
 // Application code can specialize this type.
@@ -78,3 +82,5 @@ export interface ServiceFactory {
 export type Store = Cursor<any>;
 
 export type Routes = any;
+
+export type RequestType = "get" | "post";
