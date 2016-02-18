@@ -9,9 +9,12 @@ import {
   PostResponse,
 
   ServerServices,
+  RequestContext,
 
   JSON_PAYLOAD_HEADER,
 } from "../index";
+
+import invokeService from "./invokeService";
 
 // TODO root should output a list of available services. dev-mode
 
@@ -36,21 +39,16 @@ export function makeServiceAPI(services: ServerServices) {
 
   return router;
 
-  function handleError(error, req, res) {
-    res.json({ error });
+  function handleError(error: Error, req, res) {
+    res.json({
+      error: error.toString(),
+      stack: error.stack.split("\n"),
+    });
   }
 
   async function getHandler(req, res, next) {
-    // TODO handle query. should it be payload or context? probably payload -.-
-    const service = services[req.params.service];
-
-    if (service === undefined) {
-      next();
-      return;
-    }
-
-    // Just merge everything together into a payload??
-    const payload = Object.assign({}, req.query, req.params);
+    // Merge everything together into a payload??
+    const payload = Object.assign({}, req.query);
 
     const rawJSONPayload = req.headers[JSON_PAYLOAD_HEADER];
     if (rawJSONPayload) {
@@ -59,7 +57,7 @@ export function makeServiceAPI(services: ServerServices) {
       Object.assign(payload, headerPayload);
     }
 
-    const result = await invoke(req, res, service, req.params.method, payload);
+    const result = await invokeService("get", {req}, services, <string> req.params.service, <string> req.params.method, payload);
 
     const response: GetResponse = {
       result,
@@ -71,11 +69,6 @@ export function makeServiceAPI(services: ServerServices) {
   async function postHandler(req, res, next) {
     const service = services[req.params.service];
 
-    if (service === undefined) {
-      next();
-      return;
-    }
-
     throw "to implement"
 
     // payload is JSON body.
@@ -84,27 +77,6 @@ export function makeServiceAPI(services: ServerServices) {
   // GET name/method.json?a=1&b=2
 
   // POST name/method
-}
-
-
-async function invoke<Context>(
-  req: any,
-  res: any,
-  service: ServerService<Context>,
-  method: string,
-  payload) {
-  // build context
-  let context: Context;
-  if (service.context) {
-    context = await service.context({ req });
-  }
-
-  const handler = service.get[method];
-  if (handler == null) {
-    throw new Error(`Unknown service. ${req.method} ${service.name}.${method}`)
-  }
-
-  return handler(payload, context);
 }
 
 function describeAPI(services: ServerServices) {

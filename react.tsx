@@ -93,8 +93,13 @@ export function ServiceRoot(Component: any, serviceName: string, getMethod: stri
     loadData() {
       const {service} = this.state;
 
-      // TODO: build payload from location params and query
-      service.get(getMethod);
+      // These are injected by the Router
+      // https://github.com/reactjs/react-router/blob/latest/docs/API.md#injected-props
+      const {location, params} = this.props;
+
+      const payload = Object.assign({}, location.query, params);
+
+      service.get(getMethod, payload);
     }
 
     render() {
