@@ -25,14 +25,13 @@ export interface ServerService<T> {
 export type ServerServices = { [key: string]: ServerService<any> };
 
 export interface GetRequest {
-  name: string,
-  payload: string,
+  payload?: string,
 }
 
 export interface GetResponse {
-  service: string,
-  path: string,
-  data?: any,
+  // service: string,
+  // path: string,
+  result?: any,
   error?: any,
 }
 
