@@ -36,16 +36,30 @@ export interface GetResponse {
 // POST action
 export interface PostRequest {
   payload: any,
-  reload?: ReloadRequest,
+  reload?: ReloadRequest[],
 }
 
 export interface PostResponse {
-  result: any,
-  reloadResults?: any,
+  result?: any,
+  reloadResults?: ReloadResponse[],
+  hasReloadError?: boolean,
+  // hasReloadError?: boolean,
   error?: any,
 }
 
-type ReloadRequest = any;
+export interface ReloadRequest {
+  service: string,
+  method: string,
+  payload: any,
+};
+
+export interface ReloadResponse {
+  service: string,
+  method: string,
+  result?: any,
+  error?: any,
+};
+
 
 export interface RequestContext {
   req: express.Request;

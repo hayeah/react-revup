@@ -3,6 +3,9 @@ import React = require("react");
 import {
   Service,
   Store,
+
+  ReloadRequest,
+  ServiceManager,
   // ServerServices,
   // ServiceManager,
 } from "../index";
@@ -11,9 +14,14 @@ import {
   ServiceChildContext,
 } from "./index";
 
+import {
+  RemoteServiceManager,
+} from "../client";
+
 interface State {
   service: Service;
   store: Store;
+  manager: ServiceManager;
 }
 
 interface Props {
@@ -37,17 +45,18 @@ export class ServiceDataProvider extends React.Component<Props & RouterProps, St
     constructor(props: Props & RouterProps, context: ServiceChildContext) {
       super(props, context);
 
-      const factory = context.serviceManager;
-      const service = factory.service(this.props.serviceName);
+      const manager = context.serviceManager;
+      const service = manager.service(this.props.serviceName);
       const store = service.store.select(this.props.methodName);
+
+      this.state = {
+        manager,
+        service,
+        store,
+      };
 
       // check for undefined... i guess. api should return null if it needs a void value.
       const isLoaded = store.get() !== undefined;
-
-      this.state = {
-        service,
-        store: service.store,
-      };
 
       if(isLoaded) {
         return;
@@ -57,11 +66,18 @@ export class ServiceDataProvider extends React.Component<Props & RouterProps, St
     }
 
     componentDidMount() {
+      const { store } = this.state;
+      const manager = this.state.manager as RemoteServiceManager;
       this.state.store.on("update", this.onUpdate);
+      manager.registerServiceDataProviderForReload(this);
     }
 
     componentWillUnmount() {
+      const { store } = this.state;
+      const manager = this.state.manager as RemoteServiceManager;
+
       this.state.store.off("update", this.onUpdate);
+      manager.unregisterServiceDataProviderForReload(this);
       this.clearCache();
     }
 

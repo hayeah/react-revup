@@ -76,7 +76,8 @@ class DirectService implements Service {
     const getPromise = new Promise(async (resolve, reject) => {
       try {
         const result = await invokeService("get", this.context, this.parent.services, this.name, method, payload);
-        this.store.set(result);
+        const methodStore = this.store.select(method);
+        methodStore.set(result);
         resolve(result);
       } catch (err) {
         reject(err);

@@ -11,16 +11,21 @@ import {
 
   GetResponse,
 
+  ReloadRequest,
+
   PostRequest,
   PostResponse,
 } from "../index";
 
+import { ServiceDataProvider } from "../react/ServiceDataProvider";
+
 export class RemoteServiceManager implements ServiceManager {
   store: Store;
 
-  private _promises: Promise<any>[] = [];
-
   apiRootURL: string;
+
+  private _promises: Promise<any>[] = [];
+  private _serviceDataProviders: { [key: string]: ServiceDataProvider } = {};
 
   constructor(store: Store, url: string) {
     this.store = store;
@@ -62,6 +67,11 @@ export class RemoteServiceManager implements ServiceManager {
       payload,
     };
 
+    const reloadRequests = this.buildReloadRequests();
+    if(reloadRequests.length > 0) {
+      request.reload = reloadRequests;
+    }
+
     const httpResponse = await fetch(url, {
       method: "POST",
       headers: {
@@ -78,9 +88,68 @@ export class RemoteServiceManager implements ServiceManager {
       throw response.error;
     }
 
+    // TODO probably should do something here?
+    if (response.hasReloadError === true) {
+      // throw rudely for now...
+      throw new Error("TODO: handle reload error");
+    }
+
+    if (response.reloadResults) {
+      response.reloadResults.forEach(response => {
+        const { service, method, result, error } = response;
+
+        const substore = this.store.select([service, method]);
+
+        if(error) {
+          substore.merge({ error });
+          return;
+        }
+
+        substore.set(result);
+      });
+    }
+
     // TODO: refresh store with reload data.
 
     return response.result;
+  }
+
+  registerServiceDataProviderForReload(component: ServiceDataProvider) {
+    const {serviceName, methodName} = component.props;
+    const key = `${serviceName}.${methodName}`;
+    this._serviceDataProviders[key] = component;
+  }
+
+  unregisterServiceDataProviderForReload(component: ServiceDataProvider) {
+    const {serviceName, methodName} = component.props;
+    const key = `${serviceName}.${methodName}`;
+    delete this._serviceDataProviders[key];
+  }
+
+  buildReloadRequests(): ReloadRequest[] {
+    return Object.keys(this._serviceDataProviders).map(key => {
+      const component = this._serviceDataProviders[key];
+      return this.buildReloadRequest(component);
+    });
+  }
+
+  buildReloadRequest(component: ServiceDataProvider): ReloadRequest {
+    const {
+      location,
+      params,
+      serviceName,
+      methodName,
+    } = component.props;
+
+    const payload = Object.assign({}, location.query, params);
+
+    const request: ReloadRequest = {
+      service: serviceName,
+      method: methodName,
+      payload,
+    };
+
+    return request;
   }
 }
 
@@ -103,7 +172,8 @@ class RemoteService implements Service {
 
     const result = response.result;
 
-    this.store.set(result);
+    const methodStore = this.store.select(method);
+    methodStore.set(result);
 
     return result;
   }

@@ -11,6 +11,8 @@ import {
   ServerServices,
   RequestContext,
 
+  ReloadResponse,
+
   JSON_PAYLOAD_HEADER,
 } from "../index";
 
@@ -74,6 +76,35 @@ export function makeServiceAPI(services: ServerServices) {
 
     const response: PostResponse = {
       result,
+    };
+
+    // Make reload requests
+    if(request.reload) {
+      let hasReloadError = false;
+      const reloadPromises = request.reload.map(async (request): Promise<ReloadResponse> => {
+        const { service, method, payload } = request;
+        try {
+          const result = await invokeService("get", {req}, services, service, method, payload);
+
+          return {
+            service,
+            method,
+            result,
+          };
+        } catch (error) {
+          hasReloadError = true;
+          return {
+            service,
+            method,
+            error,
+          };
+        }
+      });
+
+      const reloadResponses = await Promise.all(reloadPromises);
+
+      response.reloadResults = reloadResponses;
+      response.hasReloadError = hasReloadError;
     }
 
     res.json(response);
