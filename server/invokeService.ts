@@ -25,7 +25,13 @@ export default async function invokeService<Context>(
     context = await service.context(baseContext);
   }
 
-  const handler = service.get[methodName];
+  let handler;
+  if(type === "get") {
+    handler = service.get[methodName];
+  } else {
+    handler = service.post[methodName];
+  }
+
   if (handler == null) {
     throw new Error(`Unknown service method: ${req.method} ${serviceName}.${methodName}`);
   }

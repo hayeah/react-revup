@@ -40,9 +40,10 @@ export function makeServiceAPI(services: ServerServices) {
   return router;
 
   function handleError(error: Error, req, res) {
+    const stack = error.stack;
     res.json({
       error: error.toString(),
-      stack: error.stack.split("\n"),
+      stack: stack && stack.split("\n"),
     });
   }
 
@@ -67,11 +68,15 @@ export function makeServiceAPI(services: ServerServices) {
   }
 
   async function postHandler(req, res, next) {
-    const service = services[req.params.service];
+    const request: PostRequest = req.body;
 
-    throw "to implement"
+    const result = await invokeService("post", {req}, services, <string> req.params.service, <string> req.params.method, request.payload);
 
-    // payload is JSON body.
+    const response: PostResponse = {
+      result,
+    }
+
+    res.json(response);
   }
 
   // GET name/method.json?a=1&b=2

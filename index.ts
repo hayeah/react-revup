@@ -8,7 +8,7 @@ export const SERVICE_CURSOR_PATH = "services";
 
 // @param context For injections.
 type GetHandler<T> = (payload?: any, context?: T) => Promise<any>;
-type PostHandler<T> = (payload?: any, context?: T) => Promise<void>;
+type PostHandler<T> = (payload?: any, context?: T) => Promise<any>;
 
 export interface ServerService<T> {
   context?: (context: RequestContext) => Promise<T>;
@@ -35,15 +35,17 @@ export interface GetResponse {
 
 // POST action
 export interface PostRequest {
-  name: string,
   payload: any,
-  reload?: GetRequest,
+  reload?: ReloadRequest,
 }
 
 export interface PostResponse {
-  data?: any,
+  result: any,
+  reloadResults?: any,
   error?: any,
 }
+
+type ReloadRequest = any;
 
 export interface RequestContext {
   req: express.Request;

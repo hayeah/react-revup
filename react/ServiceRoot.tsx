@@ -19,18 +19,18 @@ interface ServiceRootState {
 export default ServiceRoot;
 
 // TODO: configurable loading indicator
-export function ServiceRoot(Component: any, serviceName: string, getMethod: string) {
+export function ServiceRoot(Component: any, serviceName: string, methodName: string) {
 
   // get context injected by ServiceContext
   class ServiceDataComponent extends React.Component<any, ServiceRootState> {
 	  static contextTypes = {
-      serviceFactory: React.PropTypes.any,
+      serviceManager: React.PropTypes.any,
     }
 
     constructor(props, context: ServiceChildContext) {
       super(props, context);
 
-      const factory = context.serviceFactory;
+      const factory = context.serviceManager;
       const service = factory.service(serviceName);
       const store = service.store;
 
@@ -84,7 +84,7 @@ export function ServiceRoot(Component: any, serviceName: string, getMethod: stri
 
       const payload = Object.assign({}, location.query, params);
 
-      service.get(getMethod, payload);
+      service.get(methodName, payload);
     }
 
     render() {

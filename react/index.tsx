@@ -3,5 +3,5 @@ import {
 } from "../index";
 
 export interface ServiceChildContext {
-  serviceFactory: ServiceManager;
+  serviceManager: ServiceManager;
 }

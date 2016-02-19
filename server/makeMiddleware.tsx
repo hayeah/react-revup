@@ -36,7 +36,7 @@ export function makeMiddleware(
 
     const App = () => {
       return (
-        <ServiceContext serviceFactory={factory}>
+        <ServiceContext serviceManager={factory}>
           <RouterContext {...routerProps}>
             <Router routes={routes} history={history}/>
           </RouterContext>

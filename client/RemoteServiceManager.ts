@@ -10,6 +10,9 @@ import {
   RequestType,
 
   GetResponse,
+
+  PostRequest,
+  PostResponse,
 } from "../index";
 
 export class RemoteServiceManager implements ServiceManager {
@@ -29,7 +32,7 @@ export class RemoteServiceManager implements ServiceManager {
     return new RemoteService(this, name, substore);
   }
 
-  async invokeService(type: RequestType, serviceName, methodName, payload: any): Promise<GetResponse> {
+  async invokeServiceGet(serviceName, methodName, payload: any): Promise<any> {
     // TODO handle post/get differently
 
     const url = `${this.apiRootURL}/${serviceName}/${methodName}.json`;
@@ -50,6 +53,35 @@ export class RemoteServiceManager implements ServiceManager {
 
     return result;
   }
+
+  async invokeServicePost(serviceName, methodName, payload: any): Promise<any> {
+    const url = `${this.apiRootURL}/${serviceName}/${methodName}.json`;
+
+    // TODO: piggy back reload requests
+    const request: PostRequest = {
+      payload,
+    };
+
+    const httpResponse = await fetch(url, {
+      method: "POST",
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+
+      body: JSON.stringify(request),
+    });
+
+    const response: PostResponse = await httpResponse.json();
+
+    if (response.error) {
+      throw response.error;
+    }
+
+    // TODO: refresh store with reload data.
+
+    return response.result;
+  }
 }
 
 class RemoteService implements Service {
@@ -67,7 +99,7 @@ class RemoteService implements Service {
   // It fetches data and sets the store... or do we let ServiceRoot do that?
   // Probably do it here, so we can use the service without ServiceRoot.
   async get(method: string, payload: any): Promise<any> {
-    const response = await this.parent.invokeService("get", this.name, method, payload);
+    const response = await this.parent.invokeServiceGet(this.name, method, payload);
 
     const result = response.result;
 
@@ -76,8 +108,8 @@ class RemoteService implements Service {
     return result;
   }
 
-  post(method: string, payload: any) {
-    throw new Error("not yet implemented");
+  async post(method: string, payload: any): Promise<any> {
+    return this.parent.invokeServicePost(this.name, method, payload);
   }
 }
 
