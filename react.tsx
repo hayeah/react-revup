@@ -4,17 +4,17 @@ import {
   Service,
   Store,
   ServerServices,
-  ServiceFactory,
+  ServiceManager,
 } from "./index";
 
 const Types = (React.PropTypes as any);
 
 interface ServiceChildContext {
-  serviceFactory: ServiceFactory;
+  serviceFactory: ServiceManager;
 }
 
 interface ServiceContextProps {
-  serviceFactory: ServiceFactory;
+  serviceFactory: ServiceManager;
 }
 
 export const ServiceContext = React.createClass<ServiceContextProps, void>({

@@ -12,7 +12,7 @@ import {
   JSON_PAYLOAD_HEADER,
 
   Store,
-  ServiceFactory,
+  ServiceManager,
   Service,
 
   RequestType,
@@ -35,7 +35,7 @@ export function mountRoutes(routes: Routes) {
 
   const apiURL = `${window.location.protocol}//${window.location.host}/api`;
 
-  const factory = new RemoteServiceFactory(store.select(SERVICE_CURSOR_PATH), apiURL);
+  const factory = new RemoteServiceManager(store.select(SERVICE_CURSOR_PATH), apiURL);
 
   function App() {
     return (
@@ -48,7 +48,7 @@ export function mountRoutes(routes: Routes) {
   ReactDOM.render(<App/>, document.querySelector(`#${REACT_ROOT_ID}`));
 }
 
-export class RemoteServiceFactory implements ServiceFactory {
+export class RemoteServiceManager implements ServiceManager {
   store: Store;
 
   private _promises: Promise<any>[] = [];
@@ -91,9 +91,9 @@ export class RemoteServiceFactory implements ServiceFactory {
 class RemoteService implements Service {
   store: Store;
   name: string;
-  parent: RemoteServiceFactory;
+  parent: RemoteServiceManager;
 
-  constructor(parent: RemoteServiceFactory, name: string, store: Store) {
+  constructor(parent: RemoteServiceManager, name: string, store: Store) {
     this.store = store;
     this.parent = parent;
     this.name = name;

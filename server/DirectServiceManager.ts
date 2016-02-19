@@ -13,13 +13,13 @@ import {
   Cursor,
   RequestContext,
   Service,
-  ServiceFactory,
+  ServiceManager,
   Store,
 } from "../index";
 
 import invokeService from "./invokeService";
 
-export class DirectServiceFactory implements ServiceFactory {
+export class DirectServiceManager implements ServiceManager {
   store: Store;
   services: ServerServices;
   context: RequestContext;
@@ -60,10 +60,10 @@ class DirectService implements Service {
   // service: ServerService<any>;
   store: Store;
   context: RequestContext;
-  parent: DirectServiceFactory;
+  parent: DirectServiceManager;
   name: string;
 
-  constructor(parent: DirectServiceFactory, name: string, store: Store, context: RequestContext) {
+  constructor(parent: DirectServiceManager, name: string, store: Store, context: RequestContext) {
     this.parent = parent;
     // this.service = service;
     this.store = store;

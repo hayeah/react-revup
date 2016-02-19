@@ -4,7 +4,7 @@ const ReactDOM = require("react-dom/server");
 const createLocation = require('history/lib/createLocation');
 const { Router, RouterContext, match, createMemoryHistory } = require('react-router');
 
-import { DirectServiceFactory } from "./DirectServiceFactory";
+import { DirectServiceManager } from "./DirectServiceManager";
 import { createStore } from "../store";
 import { ServiceContext } from "../react";
 
@@ -29,7 +29,7 @@ export function makeMiddleware(
   async function handleRoute(req, res, routerProps): Promise<void> {
     const store = createStore();
 
-    const factory = new DirectServiceFactory(services, store.select(SERVICE_CURSOR_PATH), {
+    const factory = new DirectServiceManager(services, store.select(SERVICE_CURSOR_PATH), {
       req,
     });
     // const service;

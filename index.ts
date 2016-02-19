@@ -74,8 +74,7 @@ export interface Service {
   store: Cursor<any>;
 }
 
-// A Backend is a service factory
-export interface ServiceFactory {
+export interface ServiceManager {
   service(name: string): Service;
 }
 
