@@ -54,7 +54,11 @@ export interface RequestContext {
 export interface Cursor<T> {
   unset(): void;
   get(): T;
+  get(path: string): any;
+  get(paths: string[]): any;
   set(data: T);
+  set(path: string, data: any);
+  set(paths: string[], data: any);
   select(key: string): Cursor<any>;
   select(keyPath: string[]): Cursor<any>;
 

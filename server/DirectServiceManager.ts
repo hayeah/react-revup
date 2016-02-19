@@ -36,7 +36,7 @@ export class DirectServiceManager implements ServiceManager {
     const service = this.services[name];
     const substore = this.store.select(name);
     if (service === undefined) {
-      throw `Unknown service: ${name}`;
+      throw new Error(`Unknown service: ${name}`);
     }
     return new DirectService(this, name, substore, this.context);
   }
